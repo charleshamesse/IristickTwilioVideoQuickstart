@@ -9,8 +9,11 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-    }
 
+        buildConfigField("String",
+                "TWILIO_ACCESS_TOKEN_SERVER",
+                "\"${getSecretProperty("TWILIO_ACCESS_TOKEN_SERVER", "YOUR-TOKEN-SERVER")}\"")
+    }
 
     compileOptions {
         sourceCompatibility versions.java
@@ -49,6 +52,8 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
     implementation "com.twilio:video-android:${versions.videoAndroid}"
+    implementation "com.koushikdutta.ion:ion:${versions.ion}"
+
     implementation 'com.iristick.smartglass:core:0.8.1'
     implementation 'com.iristick.smartglass:support:0.8.1'
 

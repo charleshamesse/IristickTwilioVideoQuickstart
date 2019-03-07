@@ -19,6 +19,7 @@ buildscript {
             'buildTools': '28.0.3',
             'minSdk': 19,
             'targetSdk': 28,
+            'ion': '2.1.7',
             'supportLibrary': '26.1.0',
             'videoAndroid': '3.2.2'
     ]

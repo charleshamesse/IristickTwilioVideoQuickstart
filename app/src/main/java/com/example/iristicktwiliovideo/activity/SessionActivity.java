@@ -26,6 +26,7 @@ import com.example.iristicktwiliovideo.util.IristickCapturer;
 import com.example.iristicktwiliovideo.util.RemoteParticipantListener;
 import com.iristick.smartglass.core.Headset;
 import com.iristick.smartglass.support.app.IristickApp;
+import com.koushikdutta.ion.Ion;
 import com.twilio.video.AudioCodec;
 import com.twilio.video.Camera2Capturer;
 import com.twilio.video.CameraCapturer;
@@ -49,10 +50,10 @@ import com.twilio.video.Vp8Codec;
 import org.json.JSONObject;
 
 import java.util.Collections;
+import java.util.UUID;
 
 public class SessionActivity extends BaseActivity {
     // Debug
-    private final Boolean DEBUG = false;
     private final Boolean USE_SOUND = false; // Just to avoid feedback noise while testing
 
     // Tags
@@ -62,7 +63,7 @@ public class SessionActivity extends BaseActivity {
     private static final String LOCAL_VIDEO_TRACK_NAME = "camera";
 
     // Twilio
-    private static final String ACCESS_TOKEN = "";
+    private static final String ACCESS_TOKEN_SERVER = BuildConfig.TWILIO_ACCESS_TOKEN_SERVER;
     private String accessToken;
     private Room room;
     private LocalParticipant localParticipant;
@@ -73,11 +74,9 @@ public class SessionActivity extends BaseActivity {
     private LocalAudioTrack localAudioTrack;
     private LocalVideoTrack localVideoTrack;
     private AudioManager audioManager;
-    private SharedPreferences preferences;
     private int previousAudioMode;
     private boolean previousMicrophoneMute;
     private boolean disconnectedFromOnDestroy;
-    private Camera2Capturer camera2Capturer;
 
     // Iristick
     private Headset headset;
@@ -258,37 +257,33 @@ public class SessionActivity extends BaseActivity {
         // Don't start if headset is not connected
         if(headset == null) {
             Toast.makeText(this, "Headset not connected. Using phone camera..", Toast.LENGTH_SHORT).show();
-            Camera2Capturer.Listener camera2Listener = new Camera2Capturer.Listener() {
-                @Override
-                public void onFirstFrameAvailable() {
-                    Log.i(TAG, "onFirstFrameAvailable");
-                }
+            capturer = new Camera2Capturer(this, "0", new Camera2Capturer.Listener() {
+                        @Override
+                        public void onFirstFrameAvailable() {
+                            Log.i(TAG, "onFirstFrameAvailable");
+                        }
 
-                @Override
-                public void onCameraSwitched(String newCameraId) {
-                    Log.i(TAG, "onCameraSwitched: newCameraId = " + newCameraId);
-                }
+                        @Override
+                        public void onCameraSwitched(String newCameraId) {
+                            Log.i(TAG, "onCameraSwitched: newCameraId = " + newCameraId);
+                        }
 
-                @Override
-                public void onError(Camera2Capturer.Exception camera2CapturerException) {
-                    Log.e(TAG, camera2CapturerException.getMessage());
-                }
-
-            };
-            capturer = new Camera2Capturer(this,
-                "0",
-                camera2Listener);
+                        @Override
+                        public void onError(Camera2Capturer.Exception camera2CapturerException) {
+                            Log.e(TAG, camera2CapturerException.getMessage());
+                        }
+            });
 
         }
         else {
             capturer = new IristickCapturer("0", headset);
         }
 
+        primaryVideoView.setMirror(true);
         localVideoTrack = LocalVideoTrack.create(this,
                 true,
                 capturer,
                 LOCAL_VIDEO_TRACK_NAME);
-        primaryVideoView.setMirror(true);
         localVideoTrack.addRenderer(primaryVideoView);
 
     }
@@ -337,8 +332,34 @@ public class SessionActivity extends BaseActivity {
     // Connection
     private void getTokenAndConnect() {
         // Implement your logic for fetching token from server here
-        this.accessToken = ACCESS_TOKEN;
-        connectToRoom();
+        Toast.makeText(this, "Fetching token..", Toast.LENGTH_SHORT).show();
+        String identity =  UUID.randomUUID().toString(); // This would be the username
+        Ion.with(this)
+                .load(ACCESS_TOKEN_SERVER + "/token/" + identity)
+                .asString()
+                .setCallback((err, res) -> {
+                    if (err == null) {
+                        try {
+                            JSONObject response = new JSONObject(res);
+                            SessionActivity.this.accessToken = response.getString("token");
+                            Toast.makeText(SessionActivity.this,
+                                    "Token received. Connecting..", Toast.LENGTH_SHORT)
+                                    .show();
+                            connectToRoom();
+                        }
+                        catch(Exception e) {
+                            Toast.makeText(SessionActivity.this,
+                                    "Connection error" + e.toString(), Toast.LENGTH_SHORT)
+                                    .show();
+                            Log.i(TAG, e.toString());
+                        }
+                    } else {
+                        Toast.makeText(SessionActivity.this,
+                                "Could not retrieve access token", Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                });
+
     }
 
     private void connectToRoom() {
@@ -358,16 +379,10 @@ public class SessionActivity extends BaseActivity {
         connectOptionsBuilder.preferVideoCodecs(Collections.singletonList(videoCodec));
         connectOptionsBuilder.encodingParameters(encodingParameters);
 
-        // Connect
-        if(!DEBUG) {
-            try {
-                room = Video.connect(this, connectOptionsBuilder.build(), roomListener());
-            } catch (Exception e) {
-                Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
-            }
-        }
-        else {
-            Toast.makeText(this, "Debugging: not connecting to room", Toast.LENGTH_SHORT).show();
+        try {
+            room = Video.connect(this, connectOptionsBuilder.build(), roomListener());
+        } catch (Exception e) {
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
         }
 
         // If needed, show disconnect button here
@@ -506,7 +521,6 @@ public class SessionActivity extends BaseActivity {
                 localVideoTrack.removeRenderer(thumbnailVideoView);
                 localVideoTrack.addRenderer(primaryVideoView);
             }
-            //primaryVideoView.setMirror(cameraCapturerCompat.getCameraSource() == CameraCapturer.CameraSource.FRONT_CAMERA);
         }
     }
 }
