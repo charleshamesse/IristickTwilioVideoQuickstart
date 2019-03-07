@@ -27,6 +27,7 @@ import com.example.iristicktwiliovideo.util.RemoteParticipantListener;
 import com.iristick.smartglass.core.Headset;
 import com.iristick.smartglass.support.app.IristickApp;
 import com.twilio.video.AudioCodec;
+import com.twilio.video.Camera2Capturer;
 import com.twilio.video.CameraCapturer;
 import com.twilio.video.ConnectOptions;
 import com.twilio.video.EncodingParameters;
@@ -61,7 +62,7 @@ public class SessionActivity extends BaseActivity {
     private static final String LOCAL_VIDEO_TRACK_NAME = "camera";
 
     // Twilio
-    private static final String ACCESS_TOKEN = BuildConfig.TWILIO_ACCESS_TOKEN;
+    private static final String ACCESS_TOKEN = "";
     private String accessToken;
     private Room room;
     private LocalParticipant localParticipant;
@@ -76,6 +77,7 @@ public class SessionActivity extends BaseActivity {
     private int previousAudioMode;
     private boolean previousMicrophoneMute;
     private boolean disconnectedFromOnDestroy;
+    private Camera2Capturer camera2Capturer;
 
     // Iristick
     private Headset headset;
@@ -255,18 +257,39 @@ public class SessionActivity extends BaseActivity {
 
         // Don't start if headset is not connected
         if(headset == null) {
-            Toast.makeText(this, "Headset not connected. Can't create local video track.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Headset not connected. Using phone camera..", Toast.LENGTH_SHORT).show();
+            Camera2Capturer.Listener camera2Listener = new Camera2Capturer.Listener() {
+                @Override
+                public void onFirstFrameAvailable() {
+                    Log.i(TAG, "onFirstFrameAvailable");
+                }
+
+                @Override
+                public void onCameraSwitched(String newCameraId) {
+                    Log.i(TAG, "onCameraSwitched: newCameraId = " + newCameraId);
+                }
+
+                @Override
+                public void onError(Camera2Capturer.Exception camera2CapturerException) {
+                    Log.e(TAG, camera2CapturerException.getMessage());
+                }
+
+            };
+            capturer = new Camera2Capturer(this,
+                "0",
+                camera2Listener);
+
         }
         else {
             capturer = new IristickCapturer("0", headset);
-
-            localVideoTrack = LocalVideoTrack.create(this,
-                    true,
-                    capturer,
-                    LOCAL_VIDEO_TRACK_NAME);
-            primaryVideoView.setMirror(true);
-            localVideoTrack.addRenderer(primaryVideoView);
         }
+
+        localVideoTrack = LocalVideoTrack.create(this,
+                true,
+                capturer,
+                LOCAL_VIDEO_TRACK_NAME);
+        primaryVideoView.setMirror(true);
+        localVideoTrack.addRenderer(primaryVideoView);
 
     }
 

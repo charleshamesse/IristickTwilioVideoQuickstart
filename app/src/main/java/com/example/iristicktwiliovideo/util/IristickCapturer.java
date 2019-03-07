@@ -63,10 +63,6 @@ public class IristickCapturer implements VideoCapturer {
         this.headset = headset;
         this.cameraNames = headset.getCameraIdList();
 
-        // Get thread from SurfaceTextureHelper
-        // TODO simply create another thread since surface is not used anymore
-
-        //surfaceHelper = SurfaceTextureHelper.create("SurfaceTextureHelper", sharedContext);
         HandlerThread thread = new HandlerThread("IristickCapturerThread");
         thread.start();
         cameraThreadHandler = new Handler(thread.getLooper());

@@ -7,7 +7,7 @@ buildscript {
         
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.1'
+        classpath 'com.android.tools.build:gradle:3.3.2'
         
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -15,12 +15,10 @@ buildscript {
    ext.versions = [
             'java': JavaVersion.VERSION_1_8,
             'androidGradlePlugin': '3.2.1',
-            'googleServices': '3.2.1',
             'compileSdk': 28,
             'buildTools': '28.0.3',
             'minSdk': 19,
             'targetSdk': 28,
-            'ion': '2.1.7',
             'supportLibrary': '26.1.0',
             'videoAndroid': '3.2.2'
     ]

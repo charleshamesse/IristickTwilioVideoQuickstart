@@ -34,8 +34,7 @@
 
         <activity android:name=".activity.SessionActivity"
             android:label="@string/activity_session"
-            android:parentActivityName=".activity.MainActivity"
-            android:screenOrientation="landscape">
+            android:parentActivityName=".activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activity.MainActivity" />
