@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">IristickTwilioVideo</string>
+    <string name="activity_session">Session</string>
+    <string name="text_welcome">Join a session</string>
+    <string name="text_join_session">Join session</string>
+    <string name="prompt_session_code">Session code</string>
+</resources>

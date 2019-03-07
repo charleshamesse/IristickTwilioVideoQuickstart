@@ -1,0 +1,57 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.3.1'
+        
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+   ext.versions = [
+            'java': JavaVersion.VERSION_1_8,
+            'androidGradlePlugin': '3.2.1',
+            'googleServices': '3.2.1',
+            'compileSdk': 28,
+            'buildTools': '28.0.3',
+            'minSdk': 19,
+            'targetSdk': 28,
+            'ion': '2.1.7',
+            'supportLibrary': '26.1.0',
+            'videoAndroid': '3.2.2'
+    ]
+
+    ext.getSecretProperty = { key, defaultValue ->
+        def value = System.getenv(key)
+
+        if (value == null) {
+            Properties properties = new Properties()
+            if (project.rootProject.file('local.properties').exists()) {
+                properties.load(project.rootProject.file('local.properties').newDataInputStream())
+                value = properties.getProperty(key)
+            }
+        }
+
+        if (value == null) {
+            value = defaultValue
+        }
+
+        return value
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        ivy { url 'https://developer.iristick.com/repo' }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
